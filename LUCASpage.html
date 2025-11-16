@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo, Lucas! (v1.6)</title>
+    <!-- 1. Carrega o Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Carrega a fonte monoespaçada (IBM Plex Mono) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@100;400;700&display=swap" rel="stylesheet">
+
+    <!-- 3. [ATUALIZADO v1.6] Estilos CSS customizados -->
+    <style>
+        /* [NOVO] Adiciona rolagem suave */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* [ATUALIZADO] SVG para a textura de "concreto" / ruído */
+        .texture-concrete {
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm9wPSIwIDAgMjAwIDIwMCI+DQogIDxmaWx0ZXIgaWQ9Im5vaXNlRmlsdGVyIj4NCiAgICA8ZmVUdXJidWxlbmNlIA0KICAgICAgdHlwZT0iZnJhY3RhbE5vaXNlIg0KICAgICAgYmFzZUZyZXF1ZW5jeT0iMC42NSIgDQogICAgICBudW1PY3RhdmVzPSIzIg0KICAgICAgc3RpdGNoVGlsZXM9InN0aXRjaCIvPg0KICA8L2ZpbHRlcj4NCiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlRmlsdGVyKSIgb3BhY2l0eT0iMC4wNSIvPg0KPC9zdmc+');
+        }
+
+        /* Estilo base para os "cards" */
+        .card-brutalist {
+            border: 4px solid #0E3A47;
+            box-shadow: 8px 8px 0px #0E3A47;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            font-weight: 700;
+        }
+
+        /* [ATUALIZADO] Aplicado ao flipper ou ao card não-flippável */
+        .card-brutalist-interactive:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 11px 11px 0px #0E3A47;
+        }
+        .card-brutalist-interactive:active,
+        .card-brutalist-interactive.active {
+            transform: translate(4px, 4px);
+            box-shadow: 4px 4px 0px #0E3A47;
+        }
+
+        /* Animação de "wiggle" para interação */
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-1deg) translate(0, 0); }
+            25% { transform: rotate(2deg) translate(2px, -2px); }
+            50% { transform: rotate(-2deg) translate(-2px, 2px); }
+            75% { rotate: 1deg; transform: translate(0, 0); }
+        }
+        .interactive-wiggle:active { animation: wiggle 0.3s linear; }
+        
+        /* Efeito de "carimbo" no texto */
+        .text-stamp {
+            color: #FF9800; /* Laranja */
+            -webkit-text-stroke: 3px #0E3A47;
+            text-shadow: 4px 4px 0px #0E3A47;
+            transition: all 0.2s ease-out;
+        }
+        .text-stamp:hover {
+            transform: rotate(-3.5deg) scale(1.02);
+            text-shadow: 6px 6px 0px #0E3A47;
+        }
+
+        /* --- [NOVO] SEÇÃO DA "EXPLOSÃO" --- */
+
+        #family-section {
+            opacity: 0;
+            transform: scale(0.8) rotate(-5deg);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) 0.2s;
+            display: none;
+        }
+
+        @keyframes screen-shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        body.exploded {
+            animation: screen-shake 0.5s 1 cubic-bezier(.36,.07,.19,.97);
+        }
+
+        body.exploded #family-section {
+            display: grid;
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+        }
+
+        /* [ATUALIZADO] Aplicado aos wrappers dos flippers */
+        body.exploded #card-boas-vindas-wrapper {
+            transform: rotate(10deg) translate(20px, -40px) scale(0.9);
+        }
+        body.exploded #card-status { /* Este não vira, então a regra se mantém */
+            transform: rotate(-12deg) translate(-30px, 10px) scale(0.9);
+        }
+        body.exploded #card-pais-wrapper {
+             transform: rotate(8deg) translate(10px, 30px) scale(0.9);
+        }
+        
+        /* [ATUALIZADO] Lógica do botão "DESTRUÍDO" */
+        body.exploded #action-button {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            transform: none !important; /* Remove qualquer transformação do hover/active */
+            padding: 0 !important; /* Remove o padding original */
+        }
+        
+        /* [ATUALIZADO] Transição aplicada às metades */
+        #btn-half-left, #btn-half-right {
+            transition: all 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        
+        /* [ATUALIZADO v1.6] Animação de translateX (rachado, não sumido) */
+        body.exploded #btn-half-left {
+            transform: translateX(-10px) rotate(-8deg);
+        }
+        body.exploded #btn-half-right {
+            transform: translateX(10px) rotate(6deg);
+        }
+        
+        
+        .text-default-dark-bg {
+             color: #A8D0E6;
+        }
+        
+        /* --- [ATUALIZADO] ESTILOS DO OVERLAY DE COUNTDOWN --- */
+        #countdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(14, 58, 71, 0.9);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 9998;
+            font-family: '"IBM Plex Mono"', monospace;
+        }
+
+        @keyframes pulse-number {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        /* [ATUALIZADO] Tamanho do número responsivo */
+        #countdown-number {
+            font-size: 10rem; /* Gigante no mobile */
+            font-weight: 700;
+            color: #FFEE84;
+            text-shadow: 8px 8px 0px #FF9800;
+            animation: pulse-number 1s infinite;
+        }
+        @media (min-width: 768px) { /* md: */
+             #countdown-number {
+                font-size: 15rem; /* Colossal no PC */
+             }
+        }
+
+        @keyframes shaking-bar {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-3px); }
+            100% { transform: translateX(0); }
+        }
+        
+        /* [ATUALIZADO] Barra mais larga e centralizada */
+        #countdown-bar-container {
+            width: 40%; /* Era 80% */
+            margin-left: auto;
+            margin-right: auto;
+            border: 4px solid #FFEE84;
+            background: rgba(0,0,0,0.3);
+            margin-top: 2rem;
+            animation: shaking-bar 0.3s infinite;
+        }
+
+        @keyframes blinking-bar {
+             0%, 100% { opacity: 1; } 50% { opacity: 0.7; }
+        }
+
+        /* [ATUALIZADO] Barra mais grossa */
+        #countdown-bar {
+            height: 3rem; /* Era 2rem */
+            background-color: #2B906B;
+            width: 100%;
+            transition: width 0.5s linear;
+            animation: blinking-bar 1s infinite;
+        }
+
+        /* --- [ATUALIZADO] ESTILOS DO FLIP CARD (BUG CORRIGIDO) --- */
+        /* [CORRIGIDO] Renomeado de .card-flipper para .flippable */
+        .flippable { 
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            /* [ATUALIZADO] Velocidade aumentada de 0.7s para 0.4s */
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            transform-style: preserve-3d;
+        }
+        /* [CORRIGIDO] Renomeado de .card-flipper para .flippable */
+        .flippable.is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front,
+        .card-back {
+            position: relative; 
+            width: 100%;
+            min-height: 200px; 
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+            position: absolute; 
+            top: 0;
+            left: 0;
+            /* [CORREÇÃO DO BUG] Garante que o verso tenha 100% da altura do container */
+            height: 100%;
+        }
+        /* [CORRIGIDO] Renomeado de .card-flipper para .flippable */
+         .flippable:hover {
+            transform: translate(-3px, -3px);
+         }
+
+        /* --- [NOVO] ESTILOS DA EXPLOSÃO "BOOM" --- */
+        @keyframes explosion-animation {
+            0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1.1) rotate(0deg); opacity: 0; }
+        }
+
+        #explosion-text {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none; /* Começa escondido */
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Acima de tudo */
+            /* [ATUALIZADO v1.6] Aumento de 15% */
+            font-size: 15rem;
+            font-weight: 700;
+            color: #FFEE84;
+            text-shadow: 8px 8px 0px #FF9800;
+            -webkit-text-stroke: 4px #0E3A47;
+        }
+        @media (min-width: 768px) { /* md: */
+             #explosion-text {
+                /* [ATUALIZADO v1.6] Aumento de 15% */
+                font-size: 30rem; /* Colossal no PC */
+             }
+        }
+
+        .animate-explosion {
+            animation: explosion-animation 1s cubic-bezier(.36,.07,.19,.97) forwards;
+        }
+
+        /* --- [NOVO v1.6] ESTILOS DO TYPEWRITER --- */
+        .typewriter-cursor::after {
+            content: '_';
+            font-weight: 700;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+            color: #0E3A47;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* --- [NOVO v1.6] ESTILOS DA EXPLOSÃO VISUAL --- */
+        #visual-explosion {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #FF9800 0%, transparent 70%);
+            z-index: 9998; /* Um pouco abaixo do texto "BOOM" */
+            pointer-events: none;
+            transform: scale(0);
+            opacity: 0;
+        }
+        .animate-visual-explosion {
+            animation: visual-explosion-effect 0.8s cubic-bezier(.36,.07,.19,.97) forwards;
+        }
+        @keyframes visual-explosion-effect {
+            from { transform: scale(0); opacity: 1; }
+            to { transform: scale(2); opacity: 0; }
+        }
+
+    </style>
+
+    <!-- 4. Configuração do Tailwind com a nova paleta -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'mono': ['"IBM Plex Mono"', 'monospace'],
+                    },
+                    colors: {
+                        'lucas-light-yellow': '#FFEE84',
+                        'lucas-orange': '#FF9800',
+                        'lucas-green': '#2B906B',
+                        'lucas-dark-green': '#004B34',
+                        'lucas-light-blue': '#A8D0E6',
+                        'lucas-dark-blue': '#0E3A47',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<!-- [ATUALIZADO] Fundo agora é escuro (lucas-dark-blue) com textura e texto claro -->
+<body class="font-mono bg-lucas-dark-blue texture-concrete min-h-screen p-4 md:p-8 overflow-x-hidden text-default-dark-bg">
+
+    <!-- [ATUALIZADO v1.6] Container principal (max-w-5xl) -->
+    <main class="container mx-auto max-w-5xl relative">
+
+        <!-- Header: LUCAS (Rotacionado e com efeito de carimbo) -->
+        <header class="my-12 md:my-16 text-center relative z-10">
+            <h1 id="title-lucas" class="text-7xl md:text-9xl font-bold transform -rotate-3 text-stamp interactive-wiggle cursor-pointer select-none"
+                title="Clique para chacoalhar!">
+                LUCAS
+            </h1>
+        </header>
+
+        <!-- [ATUALIZADO] Grid "Quebrada" da FASE 1 -->
+        <div class="relative grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+
+            <!-- [NOVO] Card 1 Wrapper (Flipper) -->
+            <div id="card-boas-vindas-wrapper" class="flippable transform rotate-2 z-20 md:col-span-2"
+                 title="Clique para virar">
+                <div class="card-inner">
+                    <!-- Frente do Card 1 -->
+                    <div id="card-boas-vindas" class="card-front card-brutalist bg-lucas-light-yellow p-6 text-lucas-dark-blue">
+                        <!-- [ATUALIZADO v1.6] text-3xl -->
+                        <h2 class="text-3xl font-bold border-b-4 border-lucas-dark-blue pb-2 mb-4">
+                            BOAS-VINDAS, CAMPEÃO!
+                        </h2>
+                        <!-- [ATUALIZADO v1.6] text-lg -->
+                        <p class="text-lg font-normal">
+                            Este é o seu primeiro "deploy". O mundo é um lugar estranho e maravilhoso,
+                            e estamos incrivelmente felizes por você estar aqui para "debugar" tudo com a gente.
+                        </p>
+                    </div>
+                    <!-- [ATUALIZADO v1.6] Layout de 1 Foto -->
+                    <div class="card-back card-brutalist bg-lucas-light-yellow p-4 text-lucas-dark-blue flex justify-center items-center">
+                        <img src="https://placehold.co/160x160/0E3A47/FFEE84?text=FOTO" alt="placeholder" class="w-40 h-40 border-4 border-lucas-dark-blue">
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Card 2: Status (Preto/Sistema) - NÃO VIRA -->
+            <div id="card-status" class="card-brutalist card-brutalist-interactive bg-black text-white p-4 transform -rotate-1 z-10 md:row-start-2 md:col-start-3 md:-mt-24 cursor-pointer"
+                 title="Clique para atualizar o status">
+                <div class="flex justify-between items-center border-b-2 border-lucas-light-blue pb-1 mb-3">
+                    <span class="text-sm font-bold text-lucas-light-blue">SISTEMA</span>
+                    <div class="flex space-x-1.5">
+                        <span class="w-3 h-3 bg-lucas-light-yellow block rounded-full border border-gray-400"></span>
+                        <span class="w-3 h-3 bg-lucas-orange block rounded-full border border-gray-400"></span>
+                    </div>
+                </div>
+                <!-- [ATUALIZADO v1.6] text-lg -->
+                <p class="text-lg font-bold text-lucas-green">&gt; STATUS: <span id="status-text">AMADO</span></p>
+                <p class="text-sm font-thin text-gray-400">&gt; Versão: 1.6.0</p> <!-- Atualizei a versão aqui ;) -->
+                <p class="text-sm font-thin text-gray-400">&gt; Início: 2025</p>
+            </div>
+
+            <!-- [NOVO] Card 3 Wrapper (Flipper) -->
+            <div id="card-pais-wrapper" class="flippable transform -rotate-2 z-30 md:col-span-2 md:row-start-2 md:-mt-12 md:ml-12"
+                 title="Clique para virar">
+                 <div class="card-inner">
+                    <!-- Frente do Card 3 -->
+                    <div id="card-pais" class="card-front card-brutalist bg-lucas-light-blue p-6 text-lucas-dark-blue">
+                        <!-- [ATUALIZADO v1.6] text-3xl -->
+                        <h2 class="text-3xl font-bold border-b-4 border-lucas-dark-blue pb-2 mb-4">
+                            OS GERADORES (PAIS)
+                        </h2>
+                        <!-- [ATUALIZADO v1.6] text-lg -->
+                        <p class="text-lg font-normal">
+                            <strong>Lead Developer:</strong> Ana Jessica Oliveira
+                            <br>
+                            <strong>Project Manager:</strong> Pedro Henrique Oliveira
+                            <br>
+                            <strong>Missão:</strong> Iniciar o "Projeto Lucas" e garantir 100% de uptime.
+                        </p>
+                    </div>
+                    <!-- [ATUALIZADO v1.6] Layout de 1 Foto -->
+                    <div class="card-back card-brutalist bg-lucas-light-blue p-4 text-lucas-dark-blue flex justify-center items-center">
+                        <img src="PedroJessicaLingua.jpg" alt="placeholder" class="w-40 h-40 border-4 border-lucas-dark-blue">
+                    </div>
+                 </div>
+            </div>
+
+
+            <!-- [ATUALIZADO] Card 4: Botão Físico (Verde) - Refatorado para corte vertical -->
+            <div id="action-button" class="card-brutalist card-brutalist-interactive bg-lucas-green p-8 text-center cursor-pointer transform rotate-1 z-20 md:row-start-3 md:col-start-2 md:mt-8 relative overflow-hidden">
+                <!-- Conteúdo Original (visível no início) -->
+                <div id="btn-original-content" class="relative z-10">
+                    <span class="text-3xl font-bold select-none text-white" style="-webkit-text-stroke: 2px #0E3A47; text-shadow: 3px 3px 0px #0E3A47;">
+                        NÃO APERTE!
+                    </span>
+                    <span id="click-counter" class="block text-sm font-normal mt-2 text-lucas-dark-blue">(Clicado 0 vezes)</span>
+                </div>
+
+                <!-- [ATUALIZADO] Conteúdo Partido (visível ao explodir) -->
+                <div id="btn-split-content" class="hidden absolute inset-0 flex">
+                    <!-- Metade Esquerda (Wrapper) -->
+                    <div id="btn-half-left" class="w-1/2 h-full overflow-hidden relative">
+                        <!-- Conteúdo Interno (Duplicado) -->
+                        <div class="card-brutalist bg-lucas-orange text-lucas-dark-blue p-8 text-center absolute left-0 top-0 w-full h-full border-r-2 border-lucas-dark-blue" style="width: 200%; box-shadow: none;">
+                            <span class="text-3xl font-bold select-none" style="-webkit-text-stroke: 2px #0E3A47; text-shadow: 3px 3px 0px #0E3A47;">
+                                DESTRUÍDO
+                            </span>
+                            <span class="block text-sm font-normal mt-2 text-lucas-dark-blue">SISTEMA CORROMPIDO</span>
+                        </div>
+                    </div>
+                    <!-- Metade Direita (Wrapper) -->
+                    <div id="btn-half-right" class="w-1/2 h-full overflow-hidden relative">
+                         <!-- Conteúdo Interno (Duplicado e Deslocado) -->
+                        <div class="card-brutalist bg-lucas-orange text-lucas-dark-blue p-8 text-center absolute right-0 top-0 w-full h-full border-l-2 border-lucas-dark-blue" style="width: 200%; right: 0; box-shadow: none;">
+                            <span class="text-3xl font-bold select-none" style="-webkit-text-stroke: 2px #0E3A47; text-shadow: 3px 3px 0px #0E3A47;">
+                                DESTRUÍDO
+                            </span>
+                            <span class="block text-sm font-normal mt-2 text-lucas-dark-blue">SISTEMA CORROMPIDO</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- [NOVO] SEÇÃO DA FAMÍLIA (FASE 2) - INICIALMENTE ESCONDIDA -->
+        <div id="family-section" class="relative grid grid-cols-1 md:grid-cols-2 gap-12 items-start mt-24">
+            
+            <!-- [NOVO] FAMÍLIA OLIVEIRA (Flipper) -->
+            <div class="flippable transform rotate-1 z-10" title="Clique para virar">
+                <div class="card-inner">
+                    <!-- Frente -->
+                    <div class="card-front card-brutalist bg-lucas-orange p-6 text-lucas-dark-blue">
+                        <!-- [ATUALIZADO v1.6] text-3xl -->
+                        <h2 class="text-3xl font-bold border-b-4 border-lucas-dark-blue pb-2 mb-4">FAMÍLIA OLIVEIRA</h2>
+                        <!-- [ATUALIZADO v1.6] text-lg -->
+                        <p class="text-lg font-normal">
+                            <strong>Guilda:</strong> Onde a <i>frequência</i> da música alinha corações.
+                            <br>
+                            <strong>Membros Notáveis:</strong>
+                            <br>- Vovô Alex (Bardo Nível Mestre)
+                            <br>- Tios Paulo & Cloe (Suporte)
+                            <br>- Alê, Marlene, Xerife, Marcos, Vicente (NPCs de Suporte de Elite)
+                        </p>
+                    </div>
+                    <!-- [ATUALIZADO v1.6] Layout de 1 Foto -->
+                    <div class="card-back card-brutalist bg-lucas-orange p-4 text-lucas-dark-blue flex justify-center items-center">
+                        <img src="https://placehold.co/160x160/0E3A47/FF9800?text=FOTO" alt="placeholder" class="w-40 h-40 border-4 border-lucas-dark-blue">
+                    </div>
+                </div>
+            </div>
+
+            <!-- [NOVO] FAMÍLIA ALMEIDA (Flipper) -->
+            <div class="flippable transform -rotate-2 z-10" title="Clique para virar">
+                <div class="card-inner">
+                    <!-- Frente -->
+                    <div class="card-front card-brutalist bg-lucas-light-yellow p-6 text-lucas-dark-blue">
+                        <!-- [ATUALIZADO v1.6] text-3xl -->
+                        <h2 class="text-3xl font-bold border-b-4 border-lucas-dark-blue pb-2 mb-4">FAMÍLIA ALMEIDA</h2>
+                        <!-- [ATUALIZADO v1.6] text-lg -->
+                        <p class="text-lg font-normal">
+                            <strong>Guilda:</strong> Construtores de Laços (Atributo: <i>Empatia</i>).
+                            <br>
+                            <strong>Membros Notáveis:</strong>
+                            <br>- Vovó Rose Anne (<i>`Coração.Gigante(true)`</i>)
+                            <br>- Lissa, Angélica (Suporte / Buffs de Doçura e Proteção)
+                            <br>- Cecília, Sophia, Heitor (Time de Mini-bosses)
+                            <br>- Bisavó Marta (Lore Master)
+                        </p>
+                    </div>
+                     <!-- [ATUALIZADO v1.6] Layout de 1 Foto -->
+                    <div class="card-back card-brutalist bg-lucas-light-yellow p-4 text-lucas-dark-blue flex justify-center items-center">
+                        <img src="https://placehold.co/160x160/0E3A47/FFEE84?text=FOTO" alt="placeholder" class="w-40 h-40 border-4 border-lucas-dark-blue">
+                    </div>
+                </div>
+            </div>
+
+            <!-- [NOVO] FAMÍLIA SILVA (Flipper) -->
+            <div class="flippable transform -rotate-1 z-10" title="Clique para virar">
+                <div class="card-inner">
+                    <!-- Frente -->
+                    <div class="card-front card-brutalist bg-lucas-green p-6 text-white">
+                        <!-- [ATUALIZADO v1.6] text-3xl -->
+                        <h2 class="text-3xl font-bold border-b-4 border-white pb-2 mb-4">FAMÍLIA SILVA</h2>
+                        <!-- [ATUALIZADO v1.6] text-lg -->
+                        <p class="text-lg font-normal">
+                            <strong>Clã:</strong> Onde a <i>Força de Vontade</i> (Fé) tem <i>stats</i> para mover montanhas.
+                            <br>
+                            <strong>Membros Notáveis:</strong>
+                            <br>- Vovô Gesié (+10 Carisma)
+                            <br>- Tio Jessé (Mestre de Side-Quests)
+                            <br>- Tia Carla (Mestre do Conhecimento / Suporte Presente)
+                            <br>- Davi, Bi, Rosa (Aliados Estratégicos)
+                        </p>
+                    </div>
+                     <!-- [ATUALIZADO v1.6] Layout de 1 Foto -->
+                    <div class="card-back card-brutalist bg-lucas-green p-4 text-white flex justify-center items-center">
+                        <img src="https://placehold.co/160x160/A8D0E6/2B906B?text=FOTO" alt="placeholder" class="w-40 h-40 border-4 border-white">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- [NOVO] FAMÍLIA CARDOSO (Flipper) -->
+            <div class="flippable transform rotate-2 z-10" title="Clique para virar">
+                <div class="card-inner">
+                    <!-- Frente -->
+                    <div class="card-front card-brutalist bg-lucas-light-blue p-6 text-lucas-dark-blue">
+                        <!-- [ATUALIZADO v1.6] text-3xl -->
+                        <h2 class="text-3xl font-bold border-b-4 border-lucas-dark-blue pb-2 mb-4">FAMÍLIA CARDOSO</h2>
+                        <!-- [ATUALIZADO v1.6] text-lg -->
+                        <p class="text-lg font-normal">
+                            <strong>Clã:</strong> Onde o <i>Lore</i> (Tradição) encontra o <i>`amor_incondicional.exe`</i>.
+                            <br>
+                            <strong>Membros Notáveis:</strong>
+                            <br>- Vovó Gessy (SysAdmin da Força)
+                            <br>- Bisavô Cardoso (Legado Lendário)
+                            <br>- Bisavó Tide (Hype Train)
+                            <br>- Sarah, Marcos, Débora, Lídia, Sueli, Jeremias (Equipe de Raide Completa)
+                        </p>
+                    </div>
+                    <!-- [ATUALIZADO v1.6] Layout de 1 Foto -->
+                    <div class="card-back card-brutalist bg-lucas-light-blue p-4 text-lucas-dark-blue flex justify-center items-center">
+                        <img src="https://placehold.co/160x160/0E3A47/A8D0E6?text=FOTO" alt="placeholder" class="w-40 h-40 border-4 border-lucas-dark-blue">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- [ATUALIZADO v1.6] Seção "A GRANDE QUEST" (Com Typewriter) -->
+        <div id="quest-section" class="hidden relative mt-16 text-center z-50 opacity-0 transition-opacity duration-1000">
+             <h2 class="text-4xl font-bold transform -rotate-2 text-stamp" style="color: #FFEE84;">A GRANDE QUEST</h2>
+             
+             <div class="card-brutalist bg-lucas-light-yellow p-6 text-lucas-dark-blue mt-8 text-left transform rotate-1">
+                 <!-- [ATUALIZADO v1.6] text-3xl -->
+                 <h3 class="text-3xl font-bold border-b-4 border-lucas-dark-blue pb-2 mb-4">PATCH NOTES v1.6 (LUCAS)</h3>
+                 
+                 <!-- [ATUALIZADO v1.6] Containers para o Typewriter -->
+                 <div class="text-lg font-normal space-y-4">
+                    <p id="type-line-1"></p>
+                    <p id="type-line-2"></p>
+                    <p id="type-line-3" class="pt-4"></p>
+                    <p id="type-line-4"></p>
+                 </div>
+             </div>
+        </div>
+
+
+    </main>
+
+    <!-- [ATUALIZADO v1.6] OVERLAY DE COUNTDOWN (Inicia em 5) -->
+    <div id="countdown-overlay">
+        <div class="text-center w-full px-4"> 
+            <div id="countdown-number" class="leading-none">5</div>
+            <div id="countdown-bar-container">
+                <div id="countdown-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [NOVO] OVERLAY DE EXPLOSÃO -->
+    <div id="explosion-text">BOOOOOM!</div>
+
+    <!-- [NOVO] EFEITO VISUAL DA EXPLOSÃO -->
+    <div id="visual-explosion"></div>
+
+
+    <!-- 5. [ATUALIZADO v1.6] JavaScript para Interações Exageradas -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos
+            const statusCard = document.getElementById('card-status');
+            const statusText = document.getElementById('status-text');
+            const actionButton = document.getElementById('action-button');
+            const clickCounter = document.getElementById('click-counter');
+            const titleLucas = document.getElementById('title-lucas');
+            
+            // Elementos do Countdown
+            const countdownOverlay = document.getElementById('countdown-overlay');
+            const countdownNumberEl = document.getElementById('countdown-number');
+            const countdownBarEl = document.getElementById('countdown-bar');
+
+            // Elemento de Explosão
+            const explosionText = document.getElementById('explosion-text');
+            const visualExplosion = document.getElementById('visual-explosion'); // [NOVO]
+
+            // [ATUALIZADO] Elementos da Quest
+            const questSection = document.getElementById('quest-section');
+            
+            // Variáveis de estado
+            let clicks = 0;
+            // [ATUALIZADO v1.6] Mais adjetivos nerds
+            const statusMessages = ['AMADO', 'PERFEITO', 'ONLINE', 'COMPILANDO...', 'DEPLOYADO', 'EM CACHE', 'COM FOME', '100%', 'SEM BUGS', 'REFATORADO'];
+            let statusIndex = 0;
+            let explosionTriggered = false;
+
+            // 1. Interação: Clicar no card de STATUS
+            if (statusCard) {
+                statusCard.addEventListener('click', () => {
+                    statusIndex = (statusIndex + 1) % statusMessages.length;
+                    statusText.textContent = statusMessages[statusIndex];
+                    
+                    statusCard.classList.add('active');
+                    setTimeout(() => {
+                        statusCard.classList.remove('active');
+                    }, 150);
+                });
+            }
+
+            // 2. Interação: Clicar no "Botão" (A LÓGICA DA EXPLOSÃO)
+            if (actionButton) {
+                actionButton.addEventListener('click', () => {
+                    if (explosionTriggered) return;
+
+                    clicks++;
+                    const btnOriginalContent = document.getElementById('btn-original-content');
+                    const btnText = btnOriginalContent.querySelector('span:first-child');
+                    clickCounter.textContent = `(Clicado ${clicks} vezes)`;
+                    
+                    if (clicks > 3 && clicks < 5) { // Ajustado para 5 cliques
+                        btnText.textContent = 'SÉRIO, PARE!';
+                    } else if (clicks === 5) { // [ATUALIZADO v1.6] Trigger em 5 cliques
+                        explosionTriggered = true; 
+                        
+                        btnText.textContent = 'VOCÊ QUEBROU!';
+                        
+                        countdownOverlay.style.display = 'flex';
+                        // [ATUALIZADO v1.6] Countdown de 5s
+                        let countdown = 5; 
+                        countdownNumberEl.textContent = countdown; 
+
+                        const countdownInterval = setInterval(() => {
+                            countdown--;
+                            countdownNumberEl.textContent = countdown;
+                            // [ATUALIZADO v1.6] Barra de progresso / 5
+                            countdownBarEl.style.width = (countdown / 5) * 100 + '%';
+
+                            if (countdown <= 0) {
+                                clearInterval(countdownInterval);
+                                countdownOverlay.style.display = 'none';
+                                startExplosion();
+                            }
+                        }, 1000);
+                    }
+                });
+            }
+            
+            // 3. Interação: Chacoalhar o título
+            if (titleLucas) {
+                titleLucas.addEventListener('click', () => {
+                    titleLucas.classList.add('active');
+                    setTimeout(() => {
+                        titleLucas.classList.remove('active');
+                    }, 150);
+                });
+            }
+
+            // 4. [ATUALIZADO] A "EXPLOSÃO"
+            function startExplosion() {
+                const familySection = document.getElementById('family-section');
+                const body = document.body;
+                
+                // [NOVO] Ativa o BOOM
+                explosionText.style.display = 'flex';
+                explosionText.classList.add('animate-explosion');
+                
+                // [NOVO] Ativa a explosão visual
+                visualExplosion.classList.add('animate-visual-explosion');
+
+                // [ATUALIZADO] Pega os containers do botão
+                const btnOriginal = document.getElementById('btn-original-content');
+                const btnSplit = document.getElementById('btn-split-content');
+
+                // [ATUALIZADO] Esconde o original, mostra o partido
+                btnOriginal.style.display = 'none';
+                btnSplit.style.display = 'flex'; // [MUDADO] de block para flex
+
+                // Ativa o "shake" e as animações do CSS
+                body.classList.add('exploded');
+
+                // Oculta o BOOM após a animação e rola a página
+                setTimeout(() => {
+                    explosionText.style.display = 'none';
+                    explosionText.classList.remove('animate-explosion');
+                    visualExplosion.classList.remove('animate-visual-explosion'); // Limpa a classe
+                    
+                    // Rola suavemente para a seção da família
+                    familySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                    // [ATUALIZADO] REVELA A GRANDE QUEST!
+                    questSection.style.display = 'block';
+                    setTimeout(() => {
+                        questSection.style.opacity = '1';
+                        startTypewriter(); // [NOVO v1.6] Inicia o efeito
+                    }, 50); // Pequeno delay para a transição de opacidade funcionar
+
+                }, 1000); // 1000ms = 1s (duração da animação de explosão)
+            }
+
+            // 5. [NOVO v1.6] FUNÇÃO TYPEWRITER
+            function startTypewriter() {
+                const lines = [
+                    { el: document.getElementById('type-line-1'), text: 'O <strong>Player 1 (Lucas)</strong> acaba de aceitar a <i>Main Quest</i>: "Viver".' },
+                    { el: document.getElementById('type-line-2'), text: 'O <strong>SysAdmin (Deus)</strong> já alocou os recursos necessários e designou o Guia principal: <strong>Jesus</strong>. Este Guia não é um NPC, Ele é o <i>Master Developer</i> e estará disponível para suporte 24/7, garantindo que nenhum bug corrompa o sistema permanentemente.' },
+                    { el: document.getElementById('type-line-3'), text: '<strong>Status da Quest:</strong> <i>Iniciada.</i>' },
+                    { el: document.getElementById('type-line-4'), text: '<strong>Objetivo:</strong> <i>Completar a jornada com graça e coragem.</i>' }
+                ];
+
+                let lineIndex = 0;
+                let charIndex = 0;
+                let currentElement = null;
+                let isTag = false; // Para pular a digitação de tags HTML
+
+                function type() {
+                    if (lineIndex >= lines.length) {
+                         // [NOVO] Adiciona cursor piscando no final da última linha
+                        if(currentElement) currentElement.classList.add('typewriter-cursor');
+                        return; // Todas as linhas prontas
+                    }
+
+                    currentElement = lines[lineIndex].el;
+                    const currentText = lines[lineIndex].text;
+
+                    // Remove cursor de elementos anteriores e adiciona no atual
+                    document.querySelectorAll('.typewriter-cursor').forEach(el => el.classList.remove('typewriter-cursor'));
+                    currentElement.classList.add('typewriter-cursor');
+
+
+                    if (charIndex < currentText.length) {
+                        const char = currentText.charAt(charIndex);
+
+                        // Lógica para pular tags HTML e não digitá-las
+                        if (char === '<') {
+                            isTag = true;
+                        } else if (char === '>') {
+                            isTag = false;
+                        }
+
+                        currentElement.innerHTML = currentText.substring(0, charIndex + 1);
+                        charIndex++;
+                        
+                        let speed = 30; // Velocidade normal
+                        if (isTag) speed = 0; // Se estiver dentro de uma tag, vá instantaneamente
+                        
+                        setTimeout(type, speed);
+                    } else {
+                        // Linha terminada
+                        currentElement.classList.remove('typewriter-cursor'); // Remove o cursor da linha completa
+                        lineIndex++;
+                        charIndex = 0;
+                        setTimeout(type, 500); // Pausa antes da próxima linha
+                    }
+                }
+                type(); // Inicia a digitação
+            }
+
+            // 6. [ATUALIZADO] LÓGICA DE FLIP CARD
+            const flippableCards = document.querySelectorAll('.flippable');
+            flippableCards.forEach(card => {
+                card.addEventListener('click', (e) => {
+                    // Previne que um clique num link dentro do card vire o card
+                    if (e.target.tagName !== 'A') {
+                        card.classList.toggle('is-flipped');
+                    }
+                });
+            });
+
+        });
+    </script>
+
+</body>
+</html>
